@@ -6,8 +6,20 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+.venv*/
+.npm-cache/
+*.egg-info/
 node_modules/
 dist/
+*.tsbuildinfo
 coverage/
 playwright-report/
 test-results/
+
+# Gas Town (added by gt)
+.runtime/
+.claude/
+.logs/
+state.json
+CLAUDE.md
+CLAUDE.local.md

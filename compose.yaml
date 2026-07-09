@@ -1,0 +1,14 @@
+services:
+  api:
+    build: ./backend
+    environment:
+      FIREWORKS_API_KEY: ${FIREWORKS_API_KEY:-}
+      FIREWORKS_MODEL: ${FIREWORKS_MODEL:-accounts/fireworks/models/kimi-k2-instruct-0905}
+    ports: ["8000:8000"]
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports: ["5173:80"]
+    depends_on: [api]
