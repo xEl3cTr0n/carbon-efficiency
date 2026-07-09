@@ -17,6 +17,7 @@ function App() {
   const [region, setRegion] = useState('virginia')
   const [regions, setRegions] = useState([])
   const [trace, setTrace] = useState(null)
+  const [engine, setEngine] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const { carbonIntensity, powerHistory, connected } = useLiveStream(region)
@@ -30,8 +31,10 @@ function App() {
     try {
       const data = await estimateFromText(text)
       setTrace(data.trace)
+      setEngine(data.engine ?? null)
     } catch (err) {
       setTrace([{ type: 'final_answer', text: `Error: ${err.message}. Is the backend running on :8000?` }])
+      setEngine(null)
     } finally {
       setLoading(false)
     }
@@ -74,7 +77,7 @@ function App() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <AgentTrace trace={trace} />
+        <AgentTrace trace={trace} engine={engine} />
         <RegionTable regions={regions} />
       </div>
     </div>

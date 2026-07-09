@@ -35,7 +35,7 @@ backend/
     electricitymaps.py     live carbon-intensity client (falls back to static data with no key)
     gpu_metrics.py          in-memory ring buffer of live GPU readings
   agents/
-    carbon_agent.py         Claude tool-calling agent (falls back to a regex parser with no API key)
+    carbon_agent.py         tool-calling agent: Fireworks (AMD MI300X-hosted models) > Claude > regex fallback
     gpu_poller.py            polls nvidia-smi/rocm-smi (or --mock) and pushes to /ingest/gpu
   data/
     gpu_specs.json           TDP + TFLOPs for A100/H100/MI250/MI300X
@@ -57,14 +57,26 @@ frontend/               Vite + React + Tailwind v4 dashboard
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # fill in ELECTRICITYMAPS_API_KEY / ANTHROPIC_API_KEY if you have them
+cp .env.example .env   # fill in keys below if you have them
 uvicorn main:app --reload
 ```
 
-Works with **zero API keys**: `/estimate` falls back to a regex parser
-instead of Claude, and `/live/carbon-intensity` falls back to the
-static values in `regions.json` instead of live ElectricityMaps data.
-Add the keys when you have them to upgrade both to live/agentic mode.
+Works with **zero API keys**: `/estimate` falls back to a regex parser,
+and `/live/carbon-intensity` falls back to the static values in
+`regions.json` instead of live ElectricityMaps data. Add keys to
+upgrade to live/agentic mode:
+
+- `FIREWORKS_API_KEY` — tried first. Fireworks serves several open models
+  on real AMD Instinct MI300X hardware, so this makes the agent's own
+  reasoning run on AMD compute — the strongest AMD-track story we have.
+  OpenAI-compatible API, get a key at https://app.fireworks.ai/
+- `ANTHROPIC_API_KEY` — tried second if no Fireworks key.
+- `ELECTRICITYMAPS_API_KEY` — live grid carbon intensity (independent of the above).
+
+If the configured LLM call fails for any reason (bad key, rate limit,
+network) `/estimate` automatically falls back to the regex parser and
+surfaces the failure in the trace instead of erroring out — a live-demo
+safety net.
 
 > Note: if `python3 -m venv` fails with an `ensurepip` or `pyexpat`
 > error on macOS/Homebrew Python, your local Python install is broken

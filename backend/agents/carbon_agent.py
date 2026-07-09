@@ -1,9 +1,10 @@
 """The CarbonPilot agent: turns a free-text workload description into a
 footprint analysis, reasoning about greener alternatives along the way.
 
-Uses Claude tool-calling when ANTHROPIC_API_KEY is set. Falls back to a
-regex-based parser + templated narration otherwise, so the estimator
-endpoint always works without a key.
+Engine priority: Fireworks AI (serves select models on real AMD MI300X
+hardware) > Claude > a regex-based parser + templated narration, so the
+estimator endpoint always works with zero keys configured. Set
+FIREWORKS_API_KEY to make the agent's own reasoning run on AMD compute.
 """
 import json
 import os
@@ -62,6 +63,76 @@ def _run_tool(name: str, tool_input: dict) -> dict:
     raise ValueError(f"Unknown tool {name}")
 
 
+def _openai_tools() -> list[dict]:
+    """Anthropic-style TOOLS reshaped into the OpenAI/Fireworks function-calling format."""
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": t["name"],
+                "description": t["description"],
+                "parameters": t["input_schema"],
+            },
+        }
+        for t in TOOLS
+    ]
+
+
+FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
+DEFAULT_FIREWORKS_MODEL = "accounts/fireworks/models/llama-v3p1-70b-instruct"
+
+
+def analyze_with_fireworks(workload_text: str) -> dict:
+    """Tool-calling loop against Fireworks AI's OpenAI-compatible API. Fireworks serves
+    several Llama models on real AMD Instinct MI300X hardware, so this is the path that
+    makes the agent's own reasoning run on AMD compute rather than just estimating it."""
+    from openai import OpenAI
+
+    client = OpenAI(api_key=os.environ["FIREWORKS_API_KEY"], base_url=FIREWORKS_BASE_URL)
+    model = os.getenv("FIREWORKS_MODEL", DEFAULT_FIREWORKS_MODEL)
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": workload_text},
+    ]
+    trace = []
+
+    for _ in range(5):  # bounded agent loop
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=_openai_tools(),
+            max_tokens=1024,
+        )
+        message = response.choices[0].message
+
+        if message.content:
+            trace.append({"type": "thought", "text": message.content})
+
+        if not message.tool_calls:
+            trace.append({"type": "final_answer", "text": message.content or ""})
+            return {"trace": trace, "raw_messages": None, "engine": "fireworks", "model": model}
+
+        messages.append({
+            "role": "assistant",
+            "content": message.content,
+            "tool_calls": [tc.model_dump() for tc in message.tool_calls],
+        })
+
+        for tc in message.tool_calls:
+            args = json.loads(tc.function.arguments)
+            result = _run_tool(tc.function.name, args)
+            trace.append({"type": "tool_call", "name": tc.function.name, "input": args, "result": result})
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tc.id,
+                "content": json.dumps(result),
+            })
+
+    trace.append({"type": "final_answer", "text": "Reached max reasoning steps."})
+    return {"trace": trace, "raw_messages": None, "engine": "fireworks", "model": model}
+
+
 def analyze_with_claude(workload_text: str) -> dict:
     import anthropic
 
@@ -85,7 +156,7 @@ def analyze_with_claude(workload_text: str) -> dict:
         if response.stop_reason != "tool_use":
             final_text = "".join(b.text for b in response.content if b.type == "text")
             trace.append({"type": "final_answer", "text": final_text})
-            return {"trace": trace, "raw_messages": None}
+            return {"trace": trace, "raw_messages": None, "engine": "claude", "model": "claude-sonnet-5"}
 
         messages.append({"role": "assistant", "content": response.content})
         tool_results = []
@@ -101,7 +172,7 @@ def analyze_with_claude(workload_text: str) -> dict:
         messages.append({"role": "user", "content": tool_results})
 
     trace.append({"type": "final_answer", "text": "Reached max reasoning steps."})
-    return {"trace": trace, "raw_messages": None}
+    return {"trace": trace, "raw_messages": None, "engine": "claude", "model": "claude-sonnet-5"}
 
 
 _GPU_ALIASES = {
@@ -140,7 +211,7 @@ def _regex_parse(text: str) -> dict:
 def analyze_with_fallback(workload_text: str) -> dict:
     """No-API-key path: regex-parse the text, run the same calc engine, template a narration."""
     params = _regex_parse(workload_text)
-    trace = [{"type": "thought", "text": f"Parsed workload (fallback parser, no ANTHROPIC_API_KEY set): {params}"}]
+    trace = [{"type": "thought", "text": f"Parsed workload (fallback parser, no FIREWORKS_API_KEY/ANTHROPIC_API_KEY set): {params}"}]
 
     result = calc_engine.footprint(**params)
     trace.append({"type": "tool_call", "name": "calculate_footprint", "input": params, "result": result})
@@ -160,10 +231,26 @@ def analyze_with_fallback(workload_text: str) -> dict:
         final = f"This workload produces {result['carbon_kg']} kg CO2e — already a near-optimal configuration."
     trace.append({"type": "final_answer", "text": final})
 
-    return {"trace": trace, "raw_messages": None}
+    return {"trace": trace, "raw_messages": None, "engine": "fallback", "model": None}
 
 
 def analyze(workload_text: str) -> dict:
-    if os.getenv("ANTHROPIC_API_KEY"):
-        return analyze_with_claude(workload_text)
+    """Tries the configured LLM engine; falls back to the regex parser on any failure
+    (bad/expired key, rate limit, network hiccup) so a live demo never hard-fails."""
+    for env_var, engine_fn in (
+        ("FIREWORKS_API_KEY", analyze_with_fireworks),
+        ("ANTHROPIC_API_KEY", analyze_with_claude),
+    ):
+        if not os.getenv(env_var):
+            continue
+        try:
+            return engine_fn(workload_text)
+        except Exception as exc:  # noqa: BLE001 - deliberately broad, this is a demo-safety net
+            fallback_result = analyze_with_fallback(workload_text)
+            fallback_result["trace"].insert(0, {
+                "type": "thought",
+                "text": f"{env_var} call failed ({exc}); falling back to local parser.",
+            })
+            return fallback_result
+
     return analyze_with_fallback(workload_text)
