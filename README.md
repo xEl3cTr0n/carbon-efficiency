@@ -1,7 +1,12 @@
 # CarbonPilot
 
 Agentic carbon, energy, and water footprint analyzer for AI workloads.
-Built for AMD Developer Hackathon Act II.
+Built for AMD Developer Hackathon Act II — Track 3 (Unicorn / Open Innovation).
+
+**Live demo:** https://frontend-seven-orpin-28.vercel.app
+**Backend API:** https://carbonpilot-backend.onrender.com
+**AMD hardware evidence:** [docs/amd-hardware-evidence.md](docs/amd-hardware-evidence.md)
+**Slide deck:** [docs/CarbonPilot-slide-deck.pdf](docs/CarbonPilot-slide-deck.pdf)
 
 Describe a workload in plain English ("fine-tune a 70B model on 8 MI300X
 GPUs in Virginia for 24 hours") and the agent parses it, calculates
@@ -110,6 +115,12 @@ npm run dev
 
 Opens on `http://localhost:5173`, talks to the backend on `:8000` by
 default (override with `VITE_API_BASE` in a `frontend/.env`).
+
+## Deployment
+
+- **Backend**: Render, deployed from `render.yaml` at the repo root (free web service tier). Env vars (`FIREWORKS_API_KEY`, `ELECTRICITYMAPS_API_KEY`, `CORS_ORIGINS`, etc.) are set in the Render dashboard's Environment tab, not committed.
+- **Frontend**: Vercel, deployed via `vercel --prod --build-env VITE_API_BASE=<backend-url>` from `frontend/`.
+- `CORS_ORIGINS` on the backend must include the deployed frontend's exact origin (comma-separated with `http://localhost:5173` for local dev) or the browser will block requests even though the API itself responds fine to curl.
 
 ## Getting a live ElectricityMaps key
 
