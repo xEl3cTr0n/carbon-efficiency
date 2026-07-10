@@ -174,14 +174,15 @@ h1 {
 }
 
 .dashboard {
-  padding: 22px;
+  padding: 18px;
   display: grid;
-  grid-template-columns: minmax(320px, 400px) minmax(340px, 1fr) minmax(320px, 420px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-areas:
-    "scenario metrics metrics"
-    "scenario telemetry telemetry"
+    "scenario scenario scenario"
+    "metrics metrics metrics"
+    "telemetry telemetry telemetry"
     "optimization agent report";
-  gap: 16px;
+  gap: 12px;
   align-items: start;
 }
 
@@ -196,24 +197,22 @@ h1 {
 }
 
 .panel {
-  padding: 18px;
+  padding: 16px;
 }
 
 .scenario-panel {
   grid-area: scenario;
-  position: sticky;
-  top: 18px;
 }
 
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  gap: 8px;
   grid-area: metrics;
 }
 
 .metric-grid article {
-  padding: 13px;
+  padding: 12px;
   min-width: 0;
 }
 
@@ -290,8 +289,8 @@ h1 {
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .form-grid label,
@@ -319,14 +318,14 @@ textarea {
 }
 
 textarea {
-  min-height: 64px;
+  min-height: 56px;
   resize: vertical;
   font-size: 12px;
   line-height: 1.45;
 }
 
 .ingest-grid textarea {
-  min-height: 126px;
+  min-height: 104px;
 }
 
 .primary,
@@ -337,8 +336,8 @@ textarea {
 }
 
 .primary {
-  width: 100%;
-  margin-top: 16px;
+  width: min(220px, 100%);
+  margin-top: 14px;
   background: #1c714e;
   color: white;
   padding: 11px;
@@ -377,7 +376,7 @@ textarea {
 .chart-grid,
 .ingest-grid {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .telemetry-stats {
@@ -392,8 +391,8 @@ textarea {
 }
 
 .chart-grid {
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  margin-bottom: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 12px;
 }
 
 .chart-card {
@@ -413,7 +412,7 @@ textarea {
 }
 
 .bars-chart {
-  height: 116px;
+  height: 98px;
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -429,7 +428,7 @@ textarea {
 }
 
 .ingest-grid {
-  grid-template-columns: 1fr 180px;
+  grid-template-columns: 1fr 190px;
   align-items: end;
 }
 
@@ -547,16 +546,13 @@ textarea {
 
 @media (max-width: 1320px) {
   .dashboard {
-    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-areas:
-      "scenario metrics"
-      "scenario telemetry"
+      "scenario scenario"
+      "metrics metrics"
+      "telemetry telemetry"
       "optimization agent"
       "report report";
-  }
-
-  .scenario-panel {
-    position: static;
   }
 
   .ingest-grid {
@@ -590,11 +586,12 @@ textarea {
 
   .dashboard {
     padding: 14px;
-    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-areas:
-      "scenario metrics"
-      "scenario telemetry"
-      "agent report";
+      "scenario scenario scenario"
+      "metrics metrics metrics"
+      "telemetry telemetry telemetry"
+      "optimization agent report";
     gap: 12px;
   }
 
@@ -612,7 +609,7 @@ textarea {
   }
 
   .form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .metric-grid {
