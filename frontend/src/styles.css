@@ -180,7 +180,8 @@ h1 {
   grid-template-areas:
     "scenario metrics metrics"
     "scenario telemetry telemetry"
-    "scenario optimization agent";
+    "scenario optimization agent"
+    "scenario optimization report";
   gap: 16px;
   align-items: start;
 }
@@ -240,7 +241,8 @@ h1 {
 }
 
 .optimization-panel,
-.agent-panel {
+.agent-panel,
+.report-panel {
   min-width: 0;
 }
 
@@ -250,6 +252,10 @@ h1 {
 
 .agent-panel {
   grid-area: agent;
+}
+
+.report-panel {
+  grid-area: report;
 }
 
 .panel-title {
@@ -524,19 +530,15 @@ textarea {
   font-size: 16px;
 }
 
-.report-band {
-  margin: 0 22px 22px;
-}
-
 .report-panel .panel-title {
   align-items: center;
+  flex-direction: column;
 }
 
 .report-panel ul {
   margin: 12px 0 0;
   padding-left: 18px;
-  columns: 2;
-  column-gap: 34px;
+  columns: 1;
 }
 
 .report-panel li {
@@ -551,7 +553,8 @@ textarea {
       "scenario metrics"
       "scenario telemetry"
       "optimization telemetry"
-      "optimization agent";
+      "optimization agent"
+      "report report";
   }
 
   .scenario-panel {
@@ -594,7 +597,7 @@ textarea {
       "scenario metrics"
       "scenario telemetry"
       "optimization telemetry"
-      "agent agent";
+      "agent report";
     gap: 12px;
   }
 
@@ -662,7 +665,8 @@ textarea {
   .metric-grid,
   .telemetry-panel,
   .optimization-panel,
-  .agent-panel {
+  .agent-panel,
+  .report-panel {
     display: grid;
     grid-column: auto;
     grid-row: auto;
@@ -676,7 +680,8 @@ textarea {
       "scenario"
       "telemetry"
       "optimization"
-      "agent";
+      "agent"
+      "report";
   }
 
   .form-grid,
@@ -696,7 +701,7 @@ textarea {
     columns: 1;
   }
 
-  .report-band {
-    margin: 0 12px 12px;
+  .report-panel .panel-title {
+    flex-direction: row;
   }
 }
