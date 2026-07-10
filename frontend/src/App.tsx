@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
 import {
   Activity,
   BarChart3,
@@ -72,6 +73,14 @@ type Report = {
 };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "";
+const MotionSection = motion.section;
+const MotionArticle = motion.article;
+
+const cardMotion = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.28 },
+};
 
 const defaults: FormState = {
   workload_type: "llm_inference",
@@ -264,7 +273,7 @@ export default function App() {
   ] : [], [analysis]);
 
   return (
-    <div className="shell">
+    <motion.div className="shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
       <aside>
         <div className="brand"><span><Leaf size={20} /></span><div><strong>CarbonBuilder</strong><small>Facility intelligence</small></div></div>
         <nav>
@@ -283,7 +292,7 @@ export default function App() {
         </header>
 
         <section className="dashboard">
-          <section className="panel scenario-panel">
+          <MotionSection className="panel scenario-panel" {...cardMotion}>
             <div className="panel-title">
               <div><h2>Scenario planner</h2><p>Model facility impact before capacity is committed.</p></div>
               <button className="icon" title="Reset scenario" onClick={() => setForm(defaults)}><RefreshCw size={18} /></button>
@@ -301,13 +310,23 @@ export default function App() {
             </div>
             <button className="primary" onClick={() => runAnalysis()} disabled={busy === "analysis"}>{busy === "analysis" ? "Analyzing..." : "Analyze workload"}</button>
             {error && <p className="error">{error}</p>}
-          </section>
+          </MotionSection>
 
           <section className="metric-grid">
-            {metrics.map(([label, value, Icon]) => <article key={String(label)}><span><Icon size={18} /></span><small>{label as string}</small><strong>{value as string}</strong></article>)}
+            {metrics.map(([label, value, Icon], index) => (
+              <MotionArticle
+                key={String(label)}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.035, duration: 0.24 }}
+                whileHover={{ y: -2 }}
+              >
+                <span><Icon size={18} /></span><small>{label as string}</small><strong>{value as string}</strong>
+              </MotionArticle>
+            ))}
           </section>
 
-          <section className="panel telemetry-panel">
+          <MotionSection className="panel telemetry-panel" {...cardMotion} transition={{ duration: 0.28, delay: 0.04 }}>
             <div className="panel-title">
               <div><h2>Telemetry studio</h2><p>Use synthetic runs now; paste AMD SMI CSV later without changing the app.</p></div>
               <ProviderBadge metadata={telemetry?.metadata} />
@@ -334,9 +353,9 @@ export default function App() {
             <div className="insight-list">
               {telemetry?.insights.map((item) => <article key={item.title} className={item.severity}><strong>{item.title}</strong><p>{item.detail}</p></article>)}
             </div>
-          </section>
+          </MotionSection>
 
-          <section className="panel optimization-panel">
+          <MotionSection className="panel optimization-panel" {...cardMotion} transition={{ duration: 0.28, delay: 0.08 }}>
             <div className="panel-title"><div><h2>Optimization queue</h2><p>Ranked by modeled monthly carbon savings.</p></div></div>
             {analysis?.scenarios.map((item, index) => (
               <div className="scenario" key={item.id}>
@@ -345,15 +364,15 @@ export default function App() {
                 <em>{item.carbon_savings_percent}%</em>
               </div>
             ))}
-          </section>
+          </MotionSection>
 
-          <section className="panel agent-panel">
+          <MotionSection className="panel agent-panel" {...cardMotion} transition={{ duration: 0.28, delay: 0.12 }}>
             <div className="agent-title"><span><BrainCircuit size={20} /></span><div><h2>Fireworks analysis</h2><small>{analysis?.metadata.latency_ms ?? 0} ms scenario latency</small></div></div>
             <p>{analysis?.ai_recommendation ?? "Waiting for workload analysis."}</p>
             <p>{telemetry?.ai_summary ?? "Waiting for telemetry analysis."}</p>
-          </section>
+          </MotionSection>
 
-          <section className="panel report-panel">
+          <MotionSection className="panel report-panel" {...cardMotion} transition={{ duration: 0.28, delay: 0.16 }}>
             <div className="panel-title">
               <div><h2>Operator report</h2><p>Submission-ready narrative with scenarios, telemetry, and Fireworks evidence.</p></div>
               <button className="secondary compact" onClick={() => generateReport()} disabled={busy === "report"}><FileText size={16} /> Generate report</button>
@@ -361,9 +380,9 @@ export default function App() {
             <h3>{report?.headline ?? "Report pending"}</h3>
             <p>{report?.executive_summary ?? "Generate a report after scenario and telemetry analysis."}</p>
             <ul>{report?.actions.map((action) => <li key={action}>{action}</li>)}</ul>
-          </section>
+          </MotionSection>
         </section>
       </main>
-    </div>
+    </motion.div>
   );
 }

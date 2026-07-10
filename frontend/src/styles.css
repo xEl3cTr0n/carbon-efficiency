@@ -180,8 +180,7 @@ h1 {
   grid-template-areas:
     "scenario metrics metrics"
     "scenario telemetry telemetry"
-    "scenario optimization agent"
-    "scenario optimization report";
+    "optimization agent report";
   gap: 16px;
   align-items: start;
 }
@@ -552,7 +551,6 @@ textarea {
     grid-template-areas:
       "scenario metrics"
       "scenario telemetry"
-      "optimization telemetry"
       "optimization agent"
       "report report";
   }
@@ -596,7 +594,6 @@ textarea {
     grid-template-areas:
       "scenario metrics"
       "scenario telemetry"
-      "optimization telemetry"
       "agent report";
     gap: 12px;
   }
