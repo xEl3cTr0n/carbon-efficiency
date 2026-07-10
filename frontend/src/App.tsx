@@ -353,15 +353,16 @@ export default function App() {
             <p>{telemetry?.ai_summary ?? "Waiting for telemetry analysis."}</p>
           </section>
 
-          <section className="panel report-panel">
-            <div className="panel-title">
-              <div><h2>Operator report</h2><p>Submission-ready narrative with scenarios, telemetry, and Fireworks evidence.</p></div>
-              <button className="secondary compact" onClick={() => generateReport()} disabled={busy === "report"}><FileText size={16} /> Generate report</button>
-            </div>
-            <h3>{report?.headline ?? "Report pending"}</h3>
-            <p>{report?.executive_summary ?? "Generate a report after scenario and telemetry analysis."}</p>
-            <ul>{report?.actions.map((action) => <li key={action}>{action}</li>)}</ul>
-          </section>
+        </section>
+
+        <section className="panel report-panel report-band">
+          <div className="panel-title">
+            <div><h2>Operator report</h2><p>Submission-ready narrative with scenarios, telemetry, and Fireworks evidence.</p></div>
+            <button className="secondary compact" onClick={() => generateReport()} disabled={busy === "report"}><FileText size={16} /> Generate report</button>
+          </div>
+          <h3>{report?.headline ?? "Report pending"}</h3>
+          <p>{report?.executive_summary ?? "Generate a report after scenario and telemetry analysis."}</p>
+          <ul>{report?.actions.map((action) => <li key={action}>{action}</li>)}</ul>
         </section>
       </main>
     </div>
