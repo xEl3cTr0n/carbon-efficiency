@@ -347,21 +347,23 @@ export default function App() {
             ))}
           </section>
 
-          <section className="panel agent-panel">
-            <div className="agent-title"><span><BrainCircuit size={20} /></span><div><h2>Fireworks analysis</h2><small>{analysis?.metadata.latency_ms ?? 0} ms scenario latency</small></div></div>
-            <p>{analysis?.ai_recommendation ?? "Waiting for workload analysis."}</p>
-            <p>{telemetry?.ai_summary ?? "Waiting for telemetry analysis."}</p>
-          </section>
+          <div className="analysis-stack">
+            <section className="panel agent-panel">
+              <div className="agent-title"><span><BrainCircuit size={20} /></span><div><h2>Fireworks analysis</h2><small>{analysis?.metadata.latency_ms ?? 0} ms scenario latency</small></div></div>
+              <p>{analysis?.ai_recommendation ?? "Waiting for workload analysis."}</p>
+              <p>{telemetry?.ai_summary ?? "Waiting for telemetry analysis."}</p>
+            </section>
 
-          <section className="panel report-panel">
-            <div className="panel-title">
-              <div><h2>Operator report</h2><p>Submission-ready narrative with scenarios, telemetry, and Fireworks evidence.</p></div>
-              <button className="secondary compact" onClick={() => generateReport()} disabled={busy === "report"}><FileText size={16} /> Generate report</button>
-            </div>
-            <h3>{report?.headline ?? "Report pending"}</h3>
-            <p>{report?.executive_summary ?? "Generate a report after scenario and telemetry analysis."}</p>
-            <ul>{report?.actions.map((action) => <li key={action}>{action}</li>)}</ul>
-          </section>
+            <section className="panel report-panel">
+              <div className="panel-title">
+                <div><h2>Operator report</h2><p>Submission-ready narrative with scenarios, telemetry, and Fireworks evidence.</p></div>
+                <button className="secondary compact" onClick={() => generateReport()} disabled={busy === "report"}><FileText size={16} /> Generate report</button>
+              </div>
+              <h3>{report?.headline ?? "Report pending"}</h3>
+              <p>{report?.executive_summary ?? "Generate a report after scenario and telemetry analysis."}</p>
+              <ul>{report?.actions.map((action) => <li key={action}>{action}</li>)}</ul>
+            </section>
+          </div>
         </section>
       </main>
     </div>
