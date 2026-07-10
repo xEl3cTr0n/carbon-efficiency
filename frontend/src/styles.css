@@ -176,7 +176,12 @@ h1 {
 .dashboard {
   padding: 22px;
   display: grid;
-  grid-template-columns: minmax(310px, 390px) minmax(0, 1fr) minmax(300px, 390px);
+  grid-template-columns: minmax(320px, 400px) minmax(340px, 1fr) minmax(320px, 420px);
+  grid-template-areas:
+    "scenario metrics metrics"
+    "scenario telemetry telemetry"
+    "scenario optimization agent"
+    "scenario optimization report";
   gap: 16px;
   align-items: start;
 }
@@ -196,14 +201,16 @@ h1 {
 }
 
 .scenario-panel {
-  grid-row: span 3;
+  grid-area: scenario;
+  position: sticky;
+  top: 18px;
 }
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
-  grid-column: 2 / 4;
+  grid-area: metrics;
 }
 
 .metric-grid article {
@@ -226,11 +233,11 @@ h1 {
 .metric-grid strong,
 .telemetry-stats strong {
   font-size: 14px;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .telemetry-panel {
-  grid-column: 2 / 4;
+  grid-area: telemetry;
 }
 
 .optimization-panel,
@@ -240,12 +247,15 @@ h1 {
 }
 
 .optimization-panel {
-  grid-column: 2;
+  grid-area: optimization;
 }
 
-.agent-panel,
+.agent-panel {
+  grid-area: agent;
+}
+
 .report-panel {
-  grid-column: 3;
+  grid-area: report;
 }
 
 .panel-title {
@@ -370,7 +380,7 @@ textarea {
 }
 
 .telemetry-stats {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   margin-bottom: 14px;
 }
 
@@ -381,7 +391,7 @@ textarea {
 }
 
 .chart-grid {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   margin-bottom: 14px;
 }
 
@@ -435,7 +445,7 @@ textarea {
 
 .insight-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
@@ -523,25 +533,96 @@ textarea {
   padding-left: 18px;
 }
 
-@media (max-width: 1240px) {
+@media (max-width: 1320px) {
   .dashboard {
     grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    grid-template-areas:
+      "scenario metrics"
+      "scenario telemetry"
+      "optimization telemetry"
+      "optimization agent"
+      "report report";
   }
 
-  .metric-grid,
-  .telemetry-panel {
-    grid-column: 2;
+  .scenario-panel {
+    position: static;
   }
 
+  .ingest-grid {
+    grid-template-columns: minmax(0, 1fr) 170px;
+  }
+}
+
+@media (max-width: 1080px) and (orientation: landscape) {
+  .shell {
+    grid-template-columns: 176px 1fr;
+  }
+
+  aside {
+    padding: 16px 10px;
+    gap: 18px;
+  }
+
+  nav a {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  header {
+    min-height: 72px;
+    padding: 12px 18px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .dashboard {
+    padding: 14px;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    grid-template-areas:
+      "scenario metrics"
+      "scenario telemetry"
+      "optimization telemetry"
+      "agent report";
+    gap: 12px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .form-grid,
   .metric-grid,
   .telemetry-stats,
-  .chart-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .chart-grid,
+  .ingest-grid,
+  .insight-list {
+    gap: 8px;
   }
 
-  .agent-panel,
-  .report-panel {
-    grid-column: 1 / -1;
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ingest-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ingest-grid textarea {
+    min-height: 92px;
+  }
+
+  .bars-chart {
+    height: 88px;
   }
 }
 
@@ -581,6 +662,13 @@ textarea {
   .dashboard {
     padding: 12px;
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "metrics"
+      "scenario"
+      "telemetry"
+      "optimization"
+      "agent"
+      "report";
   }
 
   .form-grid,
