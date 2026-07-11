@@ -131,6 +131,13 @@ type Report = {
   metadata: Metadata;
 };
 
+type GeneratedReport = {
+  response: Report;
+  form: FormState;
+  analysis: Analysis;
+  createdAt: string;
+};
+
 const API = import.meta.env.VITE_API_BASE_URL ?? "";
 const RUN_HISTORY_KEY = "carbonbuilder.run-history.v1";
 const MAX_RUN_HISTORY = 6;
@@ -239,10 +246,18 @@ function reportMarkdown(form: FormState, analysis: Analysis, report: Report): st
     `- Utilization: ${baseline.utilization_efficiency_percent}%`,
     "",
     "## Provider evidence",
-    `- Provider: ${report.metadata.provider}`,
-    `- Model: ${report.metadata.model}`,
-    `- Latency: ${report.metadata.latency_ms} ms`,
-    `- Fallback: ${report.metadata.fallback_used ? report.metadata.fallback_reason ?? "yes" : "no"}`,
+    `- Scenario: ${report.scenario.metadata.provider} / ${report.scenario.metadata.model} / ${report.scenario.metadata.latency_ms} ms`,
+    ...(report.telemetry ? [`- Telemetry: ${report.telemetry.metadata.provider} / ${report.telemetry.metadata.model} / ${report.telemetry.metadata.latency_ms} ms`] : []),
+    `- Report: ${report.metadata.provider} / ${report.metadata.model} / ${report.metadata.latency_ms} ms`,
+    `- Report fallback: ${report.metadata.fallback_used ? report.metadata.fallback_reason ?? "yes" : "no"}`,
+    ...(report.telemetry ? [
+      "",
+      "## Telemetry provenance",
+      `- Source: ${report.telemetry.source}`,
+      `- Samples: ${report.telemetry.summary.sample_count}`,
+      `- Duration: ${report.telemetry.summary.duration_minutes ?? 0} minutes`,
+      `- Facility energy: ${report.telemetry.summary.estimated_facility_energy_kwh} kWh`,
+    ] : []),
     "",
     "## Executive summary",
     report.executive_summary,
@@ -274,13 +289,14 @@ export default function App() {
   const [options, setOptions] = useState(fallbackOptions);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
-  const [report, setReport] = useState<Report | null>(null);
+  const [generatedReport, setGeneratedReport] = useState<GeneratedReport | null>(null);
   const [aiHealth, setAiHealth] = useState<AIHealth | null>(null);
   const [runHistory, setRunHistory] = useState<RunSnapshot[]>(loadRunHistory);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [csvText, setCsvText] = useState(sampleCsv);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const report = generatedReport?.response ?? null;
 
   const field = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -396,7 +412,12 @@ export default function App() {
             }
           : null,
       });
-      setReport(next);
+      setGeneratedReport({
+        response: next,
+        form: copySnapshot(payload),
+        analysis: copySnapshot(next.scenario),
+        createdAt: new Date().toISOString(),
+      });
       if (useAi) void refreshAIHealth();
       return next;
     } catch (err) {
@@ -633,7 +654,7 @@ export default function App() {
               <div><h2>Operator report</h2><p>Submission-ready narrative with scenarios, telemetry, and Fireworks evidence.</p></div>
               <div className="report-actions">
                 <button className="secondary compact" onClick={() => generateReport()} disabled={busy === "report"}><FileText size={16} /> Generate report</button>
-                <button className="icon" title="Download report" onClick={() => analysis && report && downloadMarkdown("carbonbuilder-operator-report.md", reportMarkdown(analyzedForm ?? form, analysis, report))} disabled={!analysis || !report}><Download size={17} /></button>
+                <button className="icon" title="Download report" onClick={() => generatedReport && downloadMarkdown(`carbonbuilder-operator-report-${generatedReport.createdAt.slice(0, 10)}.md`, reportMarkdown(generatedReport.form, generatedReport.analysis, generatedReport.response))} disabled={!generatedReport}><Download size={17} /></button>
               </div>
             </div>
             <h3>{report?.headline ?? "Report pending"}</h3>
