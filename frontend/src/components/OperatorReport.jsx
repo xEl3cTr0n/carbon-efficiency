@@ -9,7 +9,7 @@ export default function OperatorReport({ report, onGenerate, loading, disabled }
           <FileText size={16} className="text-emerald-400" />
           <div>
             <h2 className="text-sm font-medium text-slate-200">Operator report</h2>
-            <p className="text-xs text-slate-500">Submission-ready narrative with live evidence</p>
+            <p className="text-xs text-slate-500">Auto-generated with live evidence when available</p>
           </div>
         </div>
         <button
@@ -17,12 +17,12 @@ export default function OperatorReport({ report, onGenerate, loading, disabled }
           disabled={disabled || loading}
           className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-emerald-500 disabled:opacity-40"
         >
-          {loading ? 'Generating…' : 'Generate report'}
+          {loading ? 'Refreshing…' : 'Refresh report'}
         </button>
       </div>
 
       {!report && (
-        <p className="text-sm text-slate-600">Run an analysis, then generate a report.</p>
+        <p className="text-sm text-slate-600">Run an analysis above — the report generates automatically.</p>
       )}
 
       {report && (

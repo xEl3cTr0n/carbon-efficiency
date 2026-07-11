@@ -35,6 +35,21 @@ function App() {
     fetchRegions().then(setRegions).catch(() => {})
   }, [])
 
+  async function fetchReport(fields) {
+    setReportLoading(true)
+    try {
+      const nodeId = gpuNodes?.[0]?.node_id
+      const data = await generateReport({ ...fields, ...(nodeId ? { node_id: nodeId } : {}) })
+      setReport(data)
+      return data
+    } catch {
+      setReport(null)
+      return null
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
   async function handleAnalyze(text) {
     setLoading(true)
     setReport(null)
@@ -43,6 +58,15 @@ function App() {
       const data = await estimateFromText(text)
       setTrace(data.trace)
       setEngine(data.engine ?? null)
+      const parsed = extractResult(data.trace)
+      if (parsed) {
+        await fetchReport({
+          gpu_type: parsed.gpu_type,
+          gpu_count: parsed.gpu_count,
+          hours: parsed.hours,
+          region: parsed.region,
+        })
+      }
     } catch (err) {
       setTrace([{ type: 'final_answer', text: `Error: ${err.message}. Is the backend running on :8000?` }])
       setEngine(null)
@@ -54,15 +78,12 @@ function App() {
   async function handleManualAnalyze(fields) {
     setManualLoading(true)
     try {
-      const nodeId = gpuNodes?.[0]?.node_id
-      const data = await generateReport({ ...fields, ...(nodeId ? { node_id: nodeId } : {}) })
-      setReport(data)
-      setDirectResult(data.baseline)
-      setTrace([{ type: 'final_answer', text: data.executive_summary }])
-      setEngine('manual')
-    } catch (err) {
-      setTrace([{ type: 'final_answer', text: `Error: ${err.message}. Is the backend running on :8000?` }])
-      setEngine(null)
+      const data = await fetchReport(fields)
+      if (data) {
+        setDirectResult(data.baseline)
+        setTrace([{ type: 'final_answer', text: data.executive_summary }])
+        setEngine('manual')
+      }
     } finally {
       setManualLoading(false)
     }
@@ -70,24 +91,14 @@ function App() {
 
   const result = (trace && extractResult(trace)) || directResult
 
-  async function handleGenerateReport() {
+  function handleGenerateReport() {
     if (!result) return
-    setReportLoading(true)
-    try {
-      const nodeId = gpuNodes?.[0]?.node_id
-      const data = await generateReport({
-        gpu_type: result.gpu_type,
-        gpu_count: result.gpu_count,
-        hours: result.hours,
-        region: result.region,
-        ...(nodeId ? { node_id: nodeId } : {}),
-      })
-      setReport(data)
-    } catch {
-      setReport(null)
-    } finally {
-      setReportLoading(false)
-    }
+    return fetchReport({
+      gpu_type: result.gpu_type,
+      gpu_count: result.gpu_count,
+      hours: result.hours,
+      region: result.region,
+    })
   }
 
   return (
