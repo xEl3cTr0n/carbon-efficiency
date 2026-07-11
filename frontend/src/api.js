@@ -31,6 +31,12 @@ export async function fetchGpus() {
   return res.json()
 }
 
+export async function fetchGpuHistory(nodeId) {
+  const res = await fetch(`${API_BASE}/live/gpu/${encodeURIComponent(nodeId)}/history`)
+  if (!res.ok) throw new Error(`gpu history failed: ${res.status}`)
+  return res.json()
+}
+
 export async function generateReport(fields) {
   const res = await fetch(`${API_BASE}/report`, {
     method: 'POST',

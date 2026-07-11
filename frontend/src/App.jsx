@@ -10,6 +10,7 @@ import Sparkline from './components/Sparkline'
 import CarbonMap from './components/CarbonMap'
 import OptimizationQueue from './components/OptimizationQueue'
 import OperatorReport from './components/OperatorReport'
+import TelemetryCharts from './components/TelemetryCharts'
 
 function extractResult(trace) {
   const call = [...trace].reverse().find((s) => s.type === 'tool_call' && s.name === 'calculate_footprint')
@@ -100,6 +101,10 @@ function App() {
 
       <div className="mb-6">
         <StatTiles result={result} />
+      </div>
+
+      <div className="mb-6">
+        <TelemetryCharts nodeId={gpuNodes?.[0]?.node_id} />
       </div>
 
       <div className="mb-6">
