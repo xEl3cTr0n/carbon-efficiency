@@ -17,8 +17,22 @@ import ImpactEquivalents from './components/ImpactEquivalents'
 import Tabs from './components/Tabs'
 import CommandPalette from './components/CommandPalette'
 import OnboardingTour from './components/OnboardingTour'
+import VideoDemo from './components/VideoDemo'
+import { SHOW_VIDEO_TAB } from './videoConfig'
 import { motion, AnimatePresence } from 'motion/react'
-import { Activity, Radio, TrendingDown, MapPin, Link2, Play, Square, Trash2, Command, HelpCircle } from 'lucide-react'
+import {
+  Activity,
+  Radio,
+  TrendingDown,
+  MapPin,
+  Link2,
+  Play,
+  Square,
+  Trash2,
+  Command,
+  HelpCircle,
+  Clapperboard,
+} from 'lucide-react'
 
 // Deferred: these pull in d3-geo/topojson-client/world-atlas and
 // react-markdown/remark-gfm respectively - split out of the main
@@ -35,6 +49,7 @@ const TABS = [
   { id: 'live', label: 'Live Ops', icon: Radio },
   { id: 'optimization', label: 'Optimization', icon: TrendingDown },
   { id: 'regions', label: 'Regions', icon: MapPin },
+  ...(SHOW_VIDEO_TAB ? [{ id: 'video', label: 'Demo', icon: Clapperboard }] : []),
 ]
 
 const DEMO_SCENARIOS = [
@@ -455,6 +470,8 @@ function App() {
           )}
 
           {tab === 'regions' && <RegionTable regions={regions} />}
+
+          {SHOW_VIDEO_TAB && tab === 'video' && <VideoDemo />}
         </motion.div>
       </AnimatePresence>
     </div>
