@@ -10,6 +10,7 @@ The FastAPI service always calculates auditable facility metrics locally. When `
 - model
 - latency
 - fallback status
+- bounded fallback reason and retryability
 
 No key is required to run the application. Missing credentials, timeouts, and provider errors fall back to deterministic recommendations. The judged demo should show `provider: fireworks` to demonstrate the AMD/Fireworks compute path.
 
@@ -31,6 +32,7 @@ The app does not depend on GPU droplets or live AMD hardware. It is production-s
 - Scenario planner for GPU type/count, utilization, workload scale, PUE, region, renewable coverage, and cooling type.
 - Metric cards for energy, carbon, water, facility load, and utilization efficiency.
 - Ranked optimization scenarios with modeled monthly savings.
+- Ranked regional carbon comparison with factor provenance.
 - Telemetry studio with synthetic runs and pasted CSV import.
 - Charts for power, utilization, and temperature traces.
 - Fireworks-powered scenario recommendations, telemetry analysis, and executive reports.
@@ -41,6 +43,8 @@ The app does not depend on GPU droplets or live AMD hardware. It is production-s
 ## API
 
 - `GET /api/health`
+- `GET /api/health/ai`
+- `GET /api/health/ready`
 - `GET /api/options`
 - `POST /api/analyze`
 - `POST /api/telemetry/simulate`
@@ -81,11 +85,14 @@ Copy `.env.example` to backend `.env` or configure the same variables in Railway
 
 ```dotenv
 FIREWORKS_API_KEY=
-FIREWORKS_MODEL=accounts/fireworks/models/kimi-k2-instruct-0905
+FIREWORKS_MODEL=accounts/fireworks/models/gpt-oss-120b
 FIREWORKS_ENDPOINT=https://api.fireworks.ai/inference/v1/chat/completions
 FIREWORKS_TIMEOUT_SECONDS=15
+API_RATE_LIMIT_PER_MINUTE=60
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+The backend accepts either `https://api.fireworks.ai/inference/v1` or the full chat-completions URL and normalizes it internally. It rejects non-Fireworks hosts before attaching the bearer key. The default `gpt-oss-120b` model is available through Fireworks serverless inference; a dedicated deployment is not required.
 
 For Vercel, set only:
 
@@ -115,10 +122,21 @@ That helper expects `amd-smi metric --json` to be available on the VM.
 
 - Deploy `frontend/` to Vercel.
 - Deploy `backend/` to Railway using `backend/Dockerfile`.
-- Set `FIREWORKS_API_KEY`, `FIREWORKS_MODEL`, `FIREWORKS_ENDPOINT`, and `FIREWORKS_TIMEOUT_SECONDS` on Railway.
+- Set `FIREWORKS_API_KEY`, `FIREWORKS_MODEL`, `FIREWORKS_ENDPOINT`, `FIREWORKS_TIMEOUT_SECONDS`, and `API_RATE_LIMIT_PER_MINUTE` on Railway.
 - Set `VITE_API_BASE_URL` on Vercel to the Railway public URL.
 
 The frontend never receives the Fireworks key.
+
+After deployment, call `/api/health/ai` and then `/api/analyze`. A successful inference reports `provider: fireworks`; a deterministic fallback reports a bounded reason such as `authentication_failed`, `billing_required`, `model_or_endpoint_unavailable`, or `rate_limited` without returning provider response bodies or credentials.
+
+## Calculation Method
+
+- GPU IT power interpolates between an idle-power fraction and per-GPU platform power using the entered average utilization.
+- Facility power applies the entered PUE; monthly energy uses 730 hours.
+- Grid carbon uses versioned reference intensity and applies renewable coverage as a market-based adjustment.
+- Cooling water uses a documented scenario factor per facility kWh.
+- Imported telemetry energy is integrated from sample timestamps with trapezoidal power integration; invalid intervals use a five-minute fallback.
+- Workload volume is reported as tokens per month and kWh per million tokens so runs can be compared on delivered work.
 
 ## Verification
 

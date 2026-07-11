@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.options import COOLING_TYPES, GPU_TYPES, GRID_REGIONS, WORKLOAD_TYPES
+
+
+def _supported(value: str, choices: dict[str, object], label: str) -> str:
+    if value not in choices:
+        raise ValueError(f"Unsupported {label}: {value}")
+    return value
 
 
 class AnalyzeRequest(BaseModel):
@@ -15,6 +23,26 @@ class AnalyzeRequest(BaseModel):
     renewable_percent: float = Field(default=25, ge=0, le=100)
     cooling_type: str = "hybrid"
 
+    @field_validator("workload_type")
+    @classmethod
+    def validate_workload_type(cls, value: str) -> str:
+        return _supported(value, WORKLOAD_TYPES, "workload type")
+
+    @field_validator("gpu_type")
+    @classmethod
+    def validate_gpu_type(cls, value: str) -> str:
+        return _supported(value, GPU_TYPES, "GPU type")
+
+    @field_validator("grid_region")
+    @classmethod
+    def validate_grid_region(cls, value: str) -> str:
+        return _supported(value, GRID_REGIONS, "grid region")
+
+    @field_validator("cooling_type")
+    @classmethod
+    def validate_cooling_type(cls, value: str) -> str:
+        return _supported(value, COOLING_TYPES, "cooling type")
+
 
 class BaselineMetrics(BaseModel):
     energy_kwh_per_month: float
@@ -22,6 +50,8 @@ class BaselineMetrics(BaseModel):
     water_liters_per_month: float
     facility_power_kw: float
     utilization_efficiency_percent: float
+    workload_tokens_per_month: float
+    energy_kwh_per_million_tokens: float
 
 
 class Scenario(BaseModel):
@@ -38,11 +68,38 @@ class AnalysisMetadata(BaseModel):
     model: str = "deterministic-local"
     latency_ms: int = 0
     fallback_used: bool = True
+    fallback_reason: str | None = None
+    provider_attempted: bool = False
+    retryable: bool = False
+    request_id: str | None = None
+
+
+class RegionComparison(BaseModel):
+    id: str
+    label: str
+    carbon_intensity_kg_per_kwh: float
+    carbon_kg_co2e_per_month: float
+    carbon_savings_kg_co2e_per_month: float
+    carbon_savings_percent: float
+    selected: bool = False
+    source: str = "reference"
+
+
+class AIProviderHealth(BaseModel):
+    provider: str = "fireworks"
+    status: str
+    configured: bool
+    model: str
+    endpoint_host: str
+    reason_code: str | None = None
+    last_latency_ms: int = 0
+    last_checked_at: str | None = None
 
 
 class AnalyzeResponse(BaseModel):
     baseline: BaselineMetrics
     scenarios: list[Scenario]
+    region_comparison: list[RegionComparison] = Field(default_factory=list)
     ai_recommendation: str
     metadata: AnalysisMetadata = Field(default_factory=AnalysisMetadata)
 
@@ -64,6 +121,21 @@ class TelemetryContext(BaseModel):
     cooling_type: str = "hybrid"
     power_usage_effectiveness: float = Field(default=1.25, ge=1, le=3)
 
+    @field_validator("gpu_type")
+    @classmethod
+    def validate_gpu_type(cls, value: str) -> str:
+        return _supported(value, GPU_TYPES, "GPU type")
+
+    @field_validator("grid_region")
+    @classmethod
+    def validate_grid_region(cls, value: str) -> str:
+        return _supported(value, GRID_REGIONS, "grid region")
+
+    @field_validator("cooling_type")
+    @classmethod
+    def validate_cooling_type(cls, value: str) -> str:
+        return _supported(value, COOLING_TYPES, "cooling type")
+
 
 class TelemetryIngestRequest(TelemetryContext):
     samples: list[TelemetrySample] = Field(default_factory=list)
@@ -73,10 +145,12 @@ class TelemetryIngestRequest(TelemetryContext):
 class TelemetrySimulationRequest(TelemetryContext):
     duration_minutes: int = Field(default=60, ge=10, le=24 * 60)
     target_utilization: float = Field(default=65, ge=5, le=98)
+    use_ai: bool = True
 
 
 class TelemetrySummary(BaseModel):
     sample_count: int
+    duration_minutes: float
     avg_gpu_utilization_percent: float
     peak_gpu_utilization_percent: float
     avg_power_kw: float
@@ -108,6 +182,7 @@ class TelemetryCharts(BaseModel):
 class TelemetryResponse(BaseModel):
     source: str
     workload_name: str
+    samples: list[TelemetrySample] = Field(default_factory=list)
     summary: TelemetrySummary
     insights: list[TelemetryInsight]
     charts: TelemetryCharts
@@ -118,6 +193,7 @@ class TelemetryResponse(BaseModel):
 class ReportRequest(BaseModel):
     scenario: AnalyzeRequest
     telemetry: TelemetryIngestRequest | None = None
+    use_ai: bool = True
 
 
 class ReportResponse(BaseModel):

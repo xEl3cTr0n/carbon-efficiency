@@ -1,19 +1,25 @@
 from __future__ import annotations
 
+GRID_FACTOR_SOURCE = "CarbonBuilder reference factors"
+GRID_FACTOR_VINTAGE = "2026-hackathon-v1"
+
 GPU_TYPES = {
     "AMD MI300X": {
         "tdp_kw": 0.75,
-        "platform_kw_per_gpu": 9.441654502582528,
+        "platform_kw_per_gpu": 0.92,
+        "idle_power_fraction": 0.28,
         "tokens_per_kwh": 128_000,
     },
     "NVIDIA H100": {
         "tdp_kw": 0.70,
-        "platform_kw_per_gpu": 8.15,
+        "platform_kw_per_gpu": 0.86,
+        "idle_power_fraction": 0.26,
         "tokens_per_kwh": 118_000,
     },
     "AMD MI250X": {
         "tdp_kw": 0.56,
-        "platform_kw_per_gpu": 6.85,
+        "platform_kw_per_gpu": 0.70,
+        "idle_power_fraction": 0.30,
         "tokens_per_kwh": 96_000,
     },
 }
@@ -70,7 +76,14 @@ def api_options() -> dict[str, object]:
             key: {
                 "label": value["label"],
                 "carbon_intensity_kg_per_kwh": value["carbon_intensity_kg_per_kwh"],
+                "source": GRID_FACTOR_SOURCE,
+                "vintage": GRID_FACTOR_VINTAGE,
             }
             for key, value in GRID_REGIONS.items()
+        },
+        "grid_factor_metadata": {
+            "source": GRID_FACTOR_SOURCE,
+            "vintage": GRID_FACTOR_VINTAGE,
+            "methodology": "Reference grid intensity with renewable coverage applied as a market-based adjustment.",
         },
     }

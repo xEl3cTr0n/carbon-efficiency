@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import math
+from datetime import datetime
 from io import StringIO
 
 from app.options import COOLING_TYPES, GRID_REGIONS
@@ -28,6 +29,45 @@ def _grid_intensity(region: str) -> float:
 
 def _water_factor(cooling_type: str) -> float:
     return float(COOLING_TYPES.get(cooling_type, COOLING_TYPES["hybrid"])["water_liters_per_kwh"])
+
+
+def _timestamp_seconds(value: str) -> float | None:
+    try:
+        if "T" in value or value.endswith("Z"):
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+        parts = [int(part) for part in value.split(":")]
+        if len(parts) == 2:
+            return float(parts[0] * 3600 + parts[1] * 60)
+        if len(parts) == 3:
+            return float(parts[0] * 3600 + parts[1] * 60 + parts[2])
+    except (ValueError, OverflowError):
+        return None
+    return None
+
+
+def _integrate_energy(samples: list[TelemetrySample]) -> tuple[float, float]:
+    if len(samples) == 1:
+        duration_seconds = 5 * 60
+        return samples[0].power_watts / 1000 * duration_seconds / 3600, duration_seconds / 60
+
+    energy_kwh = 0.0
+    duration_seconds = 0.0
+    for previous, current in zip(samples, samples[1:]):
+        previous_time = _timestamp_seconds(previous.timestamp)
+        current_time = _timestamp_seconds(current.timestamp)
+        interval_seconds = (
+            current_time - previous_time
+            if previous_time is not None and current_time is not None
+            else 5 * 60
+        )
+        if interval_seconds <= 0:
+            interval_seconds = 5 * 60
+
+        average_power_kw = (previous.power_watts + current.power_watts) / 2 / 1000
+        energy_kwh += average_power_kw * interval_seconds / 3600
+        duration_seconds += interval_seconds
+
+    return energy_kwh, duration_seconds / 60
 
 
 def parse_csv_samples(csv_text: str) -> list[TelemetrySample]:
@@ -85,11 +125,12 @@ def summarize_telemetry(context: TelemetryContext, samples: list[TelemetrySample
     avg_power_kw = sum(sample.power_watts for sample in samples) / sample_count / 1000
     peak_power_kw = max(sample.power_watts for sample in samples) / 1000
     avg_temperature = sum(sample.temperature_c for sample in samples) / sample_count
-    estimated_it_energy = avg_power_kw * (sample_count * 5 / 60)
+    estimated_it_energy, duration_minutes = _integrate_energy(samples)
     estimated_facility_energy = estimated_it_energy * context.power_usage_effectiveness
 
     return TelemetrySummary(
         sample_count=sample_count,
+        duration_minutes=_round(duration_minutes),
         avg_gpu_utilization_percent=_round(avg_utilization),
         peak_gpu_utilization_percent=_round(peak_utilization),
         avg_power_kw=_round(avg_power_kw),
@@ -187,6 +228,7 @@ def build_telemetry_response(
     return TelemetryResponse(
         source=source or context.source,
         workload_name=context.workload_name,
+        samples=samples,
         summary=summary,
         insights=insights,
         charts=build_charts(samples),

@@ -27,6 +27,7 @@ def test_synthetic_telemetry_returns_trace_summary_and_charts():
     assert response.status_code == 200
     assert data["source"] == "synthetic"
     assert data["summary"]["sample_count"] == 16
+    assert data["summary"]["duration_minutes"] == 45.0
     assert data["summary"]["avg_gpu_utilization_percent"] == 68.0
     assert data["summary"]["estimated_facility_energy_kwh"] > data["summary"]["estimated_it_energy_kwh"]
     assert data["summary"]["carbon_kg_co2e"] > 0
@@ -83,6 +84,7 @@ def test_csv_telemetry_ingest_flags_spiky_utilization_and_uses_fireworks(monkeyp
     assert response.status_code == 200
     assert data["source"] == "amd-smi-csv"
     assert data["summary"]["sample_count"] == 4
+    assert data["summary"]["duration_minutes"] == 15.0
     assert data["summary"]["peak_gpu_utilization_percent"] == 91.0
     assert data["insights"][0]["severity"] == "warning"
     assert "bursty" in data["ai_summary"].lower()
@@ -139,4 +141,26 @@ def test_report_combines_scenario_and_telemetry_without_credentials():
     assert len(data["actions"]) >= 3
     assert data["scenario"]["baseline"]["energy_kwh_per_month"] > 0
     assert data["telemetry"]["summary"]["sample_count"] == 2
+    assert data["telemetry"]["summary"]["duration_minutes"] == 5.0
     assert data["metadata"]["fallback_used"] is True
+
+
+def test_synthetic_telemetry_can_skip_ai_without_calling_provider(monkeypatch):
+    monkeypatch.setenv("FIREWORKS_API_KEY", "test-key")
+    client = TestClient(app)
+
+    with respx.mock(assert_all_called=False) as router:
+        response = client.post(
+            "/api/telemetry/simulate",
+            json={
+                "gpu_type": "AMD MI300X",
+                "gpu_count": 8,
+                "duration_minutes": 30,
+                "target_utilization": 65,
+                "use_ai": False,
+            },
+        )
+        assert len(router.calls) == 0
+
+    assert response.status_code == 200
+    assert response.json()["metadata"]["fallback_reason"] == "skipped_by_request"

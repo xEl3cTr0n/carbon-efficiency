@@ -9,8 +9,8 @@ def _actions_from_scenario_and_telemetry(report: ReportRequest, telemetry: Telem
     scenario = analyze(report.scenario)
     actions = [
         f"Start with {scenario.scenarios[0].title.lower()} to target {scenario.scenarios[0].carbon_savings_percent}% modeled carbon savings.",
-        "Keep Fireworks recommendations visible in the demo so judges can verify the AMD inference path.",
-        "Use the telemetry importer as the bridge from simulated planning to captured AMD workload evidence.",
+        "Confirm the modeled reduction against a measured workload run before changing production capacity.",
+        "Retain telemetry source and Fireworks provider metadata with the operating record.",
     ]
 
     if report.scenario.renewable_percent < 40:
@@ -37,7 +37,8 @@ def build_report(request: ReportRequest) -> ReportResponse:
     if telemetry:
         telemetry_sentence = (
             f" Sample telemetry shows {telemetry.summary.avg_gpu_utilization_percent}% average GPU "
-            f"utilization and {telemetry.summary.estimated_facility_energy_kwh} kWh facility energy."
+            f"utilization and {telemetry.summary.estimated_facility_energy_kwh} kWh facility energy "
+            f"across {telemetry.summary.duration_minutes} minutes."
         )
 
     return ReportResponse(

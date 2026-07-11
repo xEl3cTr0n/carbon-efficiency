@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.options import COOLING_TYPES, GPU_TYPES, GRID_REGIONS
-from app.schemas import AnalyzeRequest, AnalyzeResponse, BaselineMetrics, Scenario
+from app.options import COOLING_TYPES, GPU_TYPES, GRID_FACTOR_SOURCE, GRID_REGIONS
+from app.schemas import AnalyzeRequest, AnalyzeResponse, BaselineMetrics, RegionComparison, Scenario
 
 HOURS_PER_MONTH = 730
 
@@ -27,12 +27,20 @@ def baseline_metrics(request: AnalyzeRequest) -> BaselineMetrics:
     grid = _grid_profile(request.grid_region)
     cooling = _cooling_profile(request.cooling_type)
 
-    facility_power_kw = request.gpu_count * gpu["platform_kw_per_gpu"] * request.power_usage_effectiveness
+    utilization = request.avg_gpu_utilization / 100.0
+    power_fraction = float(gpu["idle_power_fraction"]) + (
+        1.0 - float(gpu["idle_power_fraction"])
+    ) * utilization
+    it_power_kw = request.gpu_count * float(gpu["platform_kw_per_gpu"]) * power_fraction
+    facility_power_kw = it_power_kw * request.power_usage_effectiveness
     energy_kwh = facility_power_kw * HOURS_PER_MONTH
     intensity = float(grid["analysis_intensity_kg_per_kwh"])
-    carbon_kg = energy_kwh * intensity
+    non_renewable_share = max(0.0, 1.0 - request.renewable_percent / 100.0)
+    carbon_kg = energy_kwh * intensity * non_renewable_share
     water_liters = energy_kwh * float(cooling["water_liters_per_kwh"])
-    utilization_efficiency = min(98.0, request.avg_gpu_utilization * 1.13548)
+    utilization_efficiency = request.avg_gpu_utilization
+    workload_tokens = request.monthly_requests * request.avg_tokens_per_request
+    energy_per_million_tokens = energy_kwh / (workload_tokens / 1_000_000)
 
     return BaselineMetrics(
         energy_kwh_per_month=_round(energy_kwh),
@@ -40,7 +48,38 @@ def baseline_metrics(request: AnalyzeRequest) -> BaselineMetrics:
         water_liters_per_month=_round(water_liters),
         facility_power_kw=_round(facility_power_kw),
         utilization_efficiency_percent=_round(utilization_efficiency),
+        workload_tokens_per_month=_round(workload_tokens),
+        energy_kwh_per_million_tokens=_round(energy_per_million_tokens),
     )
+
+
+def build_region_comparison(
+    request: AnalyzeRequest,
+    baseline: BaselineMetrics,
+) -> list[RegionComparison]:
+    non_renewable_share = max(0.0, 1.0 - request.renewable_percent / 100.0)
+    selected_carbon = baseline.carbon_kg_co2e_per_month
+
+    rows: list[RegionComparison] = []
+    for region_id, profile in GRID_REGIONS.items():
+        intensity = float(profile["analysis_intensity_kg_per_kwh"])
+        carbon = baseline.energy_kwh_per_month * intensity * non_renewable_share
+        savings = selected_carbon - carbon
+        savings_percent = savings / selected_carbon * 100 if selected_carbon else 0.0
+        rows.append(
+            RegionComparison(
+                id=region_id,
+                label=str(profile["label"]),
+                carbon_intensity_kg_per_kwh=_round(intensity * 1000) / 1000,
+                carbon_kg_co2e_per_month=_round(carbon),
+                carbon_savings_kg_co2e_per_month=_round(savings),
+                carbon_savings_percent=_round(savings_percent),
+                selected=region_id == request.grid_region,
+                source=GRID_FACTOR_SOURCE,
+            )
+        )
+
+    return sorted(rows, key=lambda item: item.carbon_kg_co2e_per_month)
 
 
 def build_scenarios(request: AnalyzeRequest, baseline: BaselineMetrics) -> list[Scenario]:
@@ -138,5 +177,6 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     return AnalyzeResponse(
         baseline=baseline,
         scenarios=scenarios,
+        region_comparison=build_region_comparison(request, baseline),
         ai_recommendation=offline_recommendation(request, scenarios),
     )
