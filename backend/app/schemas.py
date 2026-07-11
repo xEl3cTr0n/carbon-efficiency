@@ -13,8 +13,8 @@ def _supported(value: str, choices: dict[str, object], label: str) -> str:
 
 class AnalyzeRequest(BaseModel):
     workload_type: str = "llm_inference"
-    monthly_requests: int = Field(default=6_000_000, ge=1)
-    avg_tokens_per_request: int = Field(default=750, ge=1)
+    monthly_requests: int = Field(default=6_000_000, ge=1, le=10_000_000_000)
+    avg_tokens_per_request: int = Field(default=750, ge=1, le=10_000_000)
     gpu_count: int = Field(default=16, ge=1, le=50_000)
     gpu_type: str = "AMD MI300X"
     avg_gpu_utilization: float = Field(default=55, ge=1, le=100)
@@ -105,16 +105,16 @@ class AnalyzeResponse(BaseModel):
 
 
 class TelemetrySample(BaseModel):
-    timestamp: str
+    timestamp: str = Field(min_length=1, max_length=80)
     gpu_utilization_percent: float = Field(ge=0, le=100)
-    power_watts: float = Field(ge=0)
-    memory_used_gb: float = Field(ge=0)
-    temperature_c: float = Field(ge=0)
+    power_watts: float = Field(ge=0, le=100_000_000)
+    memory_used_gb: float = Field(ge=0, le=1_000_000)
+    temperature_c: float = Field(ge=0, le=200)
 
 
 class TelemetryContext(BaseModel):
-    source: str = "manual-json"
-    workload_name: str = "AI workload"
+    source: str = Field(default="manual-json", max_length=80)
+    workload_name: str = Field(default="AI workload", max_length=160)
     gpu_type: str = "AMD MI300X"
     gpu_count: int = Field(default=8, ge=1, le=50_000)
     grid_region: str = "california"
@@ -138,8 +138,8 @@ class TelemetryContext(BaseModel):
 
 
 class TelemetryIngestRequest(TelemetryContext):
-    samples: list[TelemetrySample] = Field(default_factory=list)
-    csv_text: str | None = None
+    samples: list[TelemetrySample] = Field(default_factory=list, max_length=20_000)
+    csv_text: str | None = Field(default=None, max_length=2_000_000)
 
 
 class TelemetrySimulationRequest(TelemetryContext):

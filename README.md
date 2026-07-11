@@ -33,9 +33,11 @@ The app does not depend on GPU droplets or live AMD hardware. It is production-s
 - Metric cards for energy, carbon, water, facility load, and utilization efficiency.
 - Ranked optimization scenarios with modeled monthly savings.
 - Ranked regional carbon comparison with factor provenance.
+- Versioned local run ledger with two-run metric comparison.
 - Telemetry studio with synthetic runs and pasted CSV import.
 - Charts for power, utilization, and temperature traces.
 - Fireworks-powered scenario recommendations, telemetry analysis, and executive reports.
+- Downloadable Markdown operator report with scenario, metrics, provider evidence, and actions.
 - Deterministic fallback mode for local development and CI.
 - Optional AMD SMI collector script for future GPU VM access.
 - Dockerfiles and Compose config for reproducible local execution.
@@ -94,6 +96,8 @@ VITE_API_BASE_URL=http://localhost:8000
 
 The backend accepts either `https://api.fireworks.ai/inference/v1` or the full chat-completions URL and normalizes it internally. It rejects non-Fireworks hosts before attaching the bearer key. The default `gpt-oss-120b` model is available through Fireworks serverless inference; a dedicated deployment is not required.
 
+AI-capable POST routes are limited per client by `API_RATE_LIMIT_PER_MINUTE`. Synthetic telemetry and report requests also accept `use_ai: false`; the dashboard uses that mode for its initial supporting panels so one page load spends only the scenario-analysis inference call. Manual telemetry and report actions use Fireworks normally.
+
 For Vercel, set only:
 
 ```dotenv
@@ -136,6 +140,7 @@ After deployment, call `/api/health/ai` and then `/api/analyze`. A successful in
 - Grid carbon uses versioned reference intensity and applies renewable coverage as a market-based adjustment.
 - Cooling water uses a documented scenario factor per facility kWh.
 - Imported telemetry energy is integrated from sample timestamps with trapezoidal power integration; invalid intervals use a five-minute fallback.
+- Generated reports reuse the exact telemetry samples returned to the dashboard, preserving measured-versus-modeled provenance.
 - Workload volume is reported as tokens per month and kWh per million tokens so runs can be compared on delivered work.
 
 ## Verification

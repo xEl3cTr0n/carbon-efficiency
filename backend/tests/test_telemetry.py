@@ -164,3 +164,16 @@ def test_synthetic_telemetry_can_skip_ai_without_calling_provider(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["metadata"]["fallback_reason"] == "skipped_by_request"
+
+
+def test_invalid_telemetry_csv_returns_bounded_validation_error():
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/telemetry/ingest",
+        json={"csv_text": "timestamp,power_watts\n00:00,4200"},
+        headers={"x-forwarded-for": "203.0.113.99"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Telemetry CSV is missing one or more required columns"

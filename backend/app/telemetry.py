@@ -72,18 +72,33 @@ def _integrate_energy(samples: list[TelemetrySample]) -> tuple[float, float]:
 
 def parse_csv_samples(csv_text: str) -> list[TelemetrySample]:
     reader = csv.DictReader(StringIO(csv_text.strip()))
+    required_columns = {
+        "timestamp",
+        "gpu_utilization_percent",
+        "power_watts",
+        "memory_used_gb",
+        "temperature_c",
+    }
+    if not reader.fieldnames or not required_columns.issubset(reader.fieldnames):
+        raise ValueError("Telemetry CSV is missing one or more required columns")
+
     samples: list[TelemetrySample] = []
 
-    for row in reader:
-        samples.append(
-            TelemetrySample(
-                timestamp=str(row["timestamp"]),
-                gpu_utilization_percent=float(row["gpu_utilization_percent"]),
-                power_watts=float(row["power_watts"]),
-                memory_used_gb=float(row["memory_used_gb"]),
-                temperature_c=float(row["temperature_c"]),
+    for row_number, row in enumerate(reader, start=2):
+        if len(samples) >= 20_000:
+            raise ValueError("Telemetry CSV exceeds the 20,000 sample limit")
+        try:
+            samples.append(
+                TelemetrySample(
+                    timestamp=str(row["timestamp"]),
+                    gpu_utilization_percent=float(row["gpu_utilization_percent"]),
+                    power_watts=float(row["power_watts"]),
+                    memory_used_gb=float(row["memory_used_gb"]),
+                    temperature_c=float(row["temperature_c"]),
+                )
             )
-        )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"Telemetry CSV row {row_number} is invalid") from exc
 
     return samples
 

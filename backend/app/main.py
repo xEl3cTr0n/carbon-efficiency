@@ -6,7 +6,7 @@ from collections import defaultdict, deque
 from threading import Lock
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -121,13 +121,19 @@ async def simulate_telemetry_endpoint(request: TelemetrySimulationRequest) -> Te
 
 @app.post("/api/telemetry/ingest", response_model=TelemetryResponse)
 async def ingest_telemetry_endpoint(request: TelemetryIngestRequest) -> TelemetryResponse:
-    deterministic = ingest_telemetry(request)
+    try:
+        deterministic = ingest_telemetry(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return await enrich_telemetry_with_fireworks(deterministic)
 
 
 @app.post("/api/report", response_model=ReportResponse)
 async def report_endpoint(request: ReportRequest) -> ReportResponse:
-    deterministic = build_report(request)
+    try:
+        deterministic = build_report(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     if not request.use_ai:
         deterministic.metadata = AnalysisMetadata(fallback_reason="skipped_by_request")
         return deterministic

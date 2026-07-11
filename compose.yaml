@@ -3,7 +3,10 @@ services:
     build: ./backend
     environment:
       FIREWORKS_API_KEY: ${FIREWORKS_API_KEY:-}
-      FIREWORKS_MODEL: ${FIREWORKS_MODEL:-accounts/fireworks/models/kimi-k2-instruct-0905}
+      FIREWORKS_MODEL: ${FIREWORKS_MODEL:-accounts/fireworks/models/gpt-oss-120b}
+      FIREWORKS_ENDPOINT: ${FIREWORKS_ENDPOINT:-https://api.fireworks.ai/inference/v1/chat/completions}
+      FIREWORKS_TIMEOUT_SECONDS: ${FIREWORKS_TIMEOUT_SECONDS:-15}
+      API_RATE_LIMIT_PER_MINUTE: ${API_RATE_LIMIT_PER_MINUTE:-60}
     ports: ["8000:8000"]
   web:
     build:

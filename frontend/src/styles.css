@@ -91,6 +91,7 @@ nav a {
   border-radius: 5px;
   font-size: 13px;
   color: #9db1a8;
+  text-decoration: none;
 }
 
 nav .active {
@@ -134,6 +135,18 @@ header p {
   color: #6f8279;
   font-size: 10px;
   font-weight: 800;
+}
+
+.header-status {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.header-status > small {
+  color: #74857d;
+  font-size: 10px;
+  text-transform: capitalize;
 }
 
 h1 {
@@ -180,6 +193,7 @@ h1 {
   grid-template-areas:
     "scenario scenario scenario"
     "metrics metrics metrics"
+    "decision decision decision"
     "telemetry telemetry telemetry"
     "optimization agent report";
   gap: 12px;
@@ -198,10 +212,16 @@ h1 {
 
 .panel {
   padding: 16px;
+  scroll-margin-top: 14px;
 }
 
 .scenario-panel {
   grid-area: scenario;
+}
+
+.decision-panel {
+  grid-area: decision;
+  min-width: 0;
 }
 
 .metric-grid {
@@ -280,11 +300,35 @@ h1 {
   margin: 5px 0 0;
 }
 
+.planner-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.draft-status {
+  border-radius: 4px;
+  background: #fff2d9;
+  color: #785915;
+  padding: 5px 7px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
 .icon {
   border: 1px solid #dce4df;
   background: white;
   padding: 7px;
   border-radius: 5px;
+}
+
+.icon:disabled {
+  opacity: .45;
+}
+
+.icon.subtle {
+  padding: 5px;
+  color: #6d7e76;
 }
 
 .form-grid {
@@ -303,6 +347,14 @@ h1 {
 .form-grid .wide,
 .ingest-grid label {
   grid-column: 1 / -1;
+}
+
+.factor-note {
+  display: block;
+  margin-top: 5px;
+  color: #74857d;
+  font-size: 9px;
+  font-weight: 600;
 }
 
 input,
@@ -443,6 +495,196 @@ textarea {
   text-align: center;
 }
 
+.factor-source {
+  flex-shrink: 0;
+  border: 1px solid #dce4df;
+  border-radius: 4px;
+  padding: 5px 7px;
+  color: #61736b;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.decision-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.region-section,
+.history-section {
+  min-width: 0;
+}
+
+.section-heading,
+.section-heading > span,
+.report-actions {
+  display: flex;
+  align-items: center;
+}
+
+.section-heading {
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 30px;
+  margin-bottom: 8px;
+}
+
+.section-heading > span {
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.section-heading > span svg {
+  color: #2e8b62;
+}
+
+.section-heading small,
+.history-help {
+  color: #74857d;
+  font-size: 10px;
+}
+
+.region-head,
+.region-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.35fr) minmax(58px, .65fr) minmax(78px, .8fr) minmax(74px, .8fr);
+  gap: 9px;
+  align-items: center;
+}
+
+.region-head {
+  padding: 0 8px 7px;
+  color: #87978f;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.region-row {
+  position: relative;
+  min-height: 38px;
+  border-top: 1px solid #e7ece9;
+  padding: 7px 8px 9px;
+  overflow: hidden;
+  font-size: 10px;
+}
+
+.region-row.selected {
+  background: #f0f7f3;
+}
+
+.region-row strong {
+  font-size: 11px;
+}
+
+.region-row > i {
+  position: absolute;
+  bottom: 3px;
+  left: 8px;
+  height: 2px;
+  max-width: calc(100% - 16px);
+  background: #59a986;
+}
+
+.positive {
+  color: #21704c;
+}
+
+.negative {
+  color: #a55f29;
+}
+
+.history-help {
+  margin: 0 0 8px;
+}
+
+.run-list {
+  max-height: 164px;
+  overflow: auto;
+  border-top: 1px solid #e7ece9;
+}
+
+.run-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 45px;
+  border-bottom: 1px solid #e7ece9;
+  padding: 7px 2px;
+  cursor: pointer;
+}
+
+.run-row > input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #1c714e;
+}
+
+.run-row > span,
+.run-row small {
+  display: block;
+  min-width: 0;
+}
+
+.run-row strong {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.run-row small {
+  margin-top: 3px;
+  color: #81928a;
+  font-size: 9px;
+}
+
+.run-row > b {
+  font-size: 10px;
+}
+
+.empty-state {
+  margin: 10px 0;
+  color: #81928a;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.run-comparison {
+  margin-top: 10px;
+  border-top: 1px solid #dbe4df;
+}
+
+.run-comparison > div {
+  display: grid;
+  grid-template-columns: minmax(74px, 1fr) repeat(3, minmax(54px, .7fr));
+  gap: 7px;
+  padding: 6px 2px;
+  border-bottom: 1px solid #edf1ef;
+  font-size: 9px;
+}
+
+.run-comparison .comparison-head {
+  color: #74857d;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.comparison-head > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.run-comparison b {
+  text-align: right;
+}
+
 .insight-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -523,6 +765,14 @@ textarea {
   padding-left: 12px;
 }
 
+.diagnostics {
+  margin-top: 10px;
+  border-top: 1px solid #e7ece9;
+  padding-top: 8px;
+  color: #8a6824 !important;
+  font-size: 10px !important;
+}
+
 .report-panel h3 {
   margin: 0 0 10px;
   font-size: 16px;
@@ -531,6 +781,15 @@ textarea {
 .report-panel .panel-title {
   align-items: center;
   flex-direction: column;
+}
+
+.report-actions {
+  width: 100%;
+  gap: 7px;
+}
+
+.report-actions .secondary {
+  flex: 1;
 }
 
 .report-panel ul {
@@ -550,6 +809,7 @@ textarea {
     grid-template-areas:
       "scenario scenario"
       "metrics metrics"
+      "decision decision"
       "telemetry telemetry"
       "optimization agent"
       "report report";
@@ -590,6 +850,7 @@ textarea {
     grid-template-areas:
       "scenario scenario scenario"
       "metrics metrics metrics"
+      "decision decision decision"
       "telemetry telemetry telemetry"
       "optimization agent report";
     gap: 12px;
@@ -657,6 +918,7 @@ textarea {
   .dashboard,
   .scenario-panel,
   .metric-grid,
+  .decision-panel,
   .telemetry-panel,
   .optimization-panel,
   .agent-panel,
@@ -672,6 +934,7 @@ textarea {
     grid-template-areas:
       "metrics"
       "scenario"
+      "decision"
       "telemetry"
       "optimization"
       "agent"
@@ -680,6 +943,7 @@ textarea {
 
   .form-grid,
   .metric-grid,
+  .decision-grid,
   .telemetry-stats,
   .chart-grid,
   .ingest-grid,
@@ -691,11 +955,16 @@ textarea {
     max-width: 100%;
   }
 
+  .header-status {
+    justify-items: start;
+  }
+
   .report-panel ul {
     columns: 1;
   }
 
   .report-panel .panel-title {
-    flex-direction: row;
+    align-items: stretch;
+    flex-direction: column;
   }
 }
