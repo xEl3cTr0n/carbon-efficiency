@@ -1,8 +1,13 @@
-function Tile({ label, value, unit, source }) {
+import { Zap, Leaf, Droplets, TreePine } from 'lucide-react'
+
+function Tile({ label, value, unit, source, icon: Icon }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
+        <span className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-slate-400">
+          {Icon && <Icon size={14} className="text-emerald-500" />}
+          {label}
+        </span>
         {source && (
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
@@ -38,10 +43,10 @@ export default function StatTiles({ result }) {
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <Tile label="Energy used" value={result.energy_kwh} unit="kWh" />
-      <Tile label="Carbon emissions" value={result.carbon_kg} unit="kg CO2e" source={result.carbon_intensity_source} />
-      <Tile label="Water usage" value={result.water_l} unit="liters" />
-      <Tile label="Trees to offset" value={result.trees_per_year} unit="trees/yr" />
+      <Tile label="Energy used" value={result.energy_kwh} unit="kWh" icon={Zap} />
+      <Tile label="Carbon emissions" value={result.carbon_kg} unit="kg CO2e" source={result.carbon_intensity_source} icon={Leaf} />
+      <Tile label="Water usage" value={result.water_l} unit="liters" icon={Droplets} />
+      <Tile label="Trees to offset" value={result.trees_per_year} unit="trees/yr" icon={TreePine} />
     </div>
   )
 }

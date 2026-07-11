@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { estimateFromText, fetchRegions, generateReport } from './api'
 import { useLiveStream } from './hooks/useLiveStream'
 import WorkloadForm from './components/WorkloadForm'
+import ScenarioForm from './components/ScenarioForm'
 import StatTiles from './components/StatTiles'
 import AgentTrace from './components/AgentTrace'
 import RegionTable from './components/RegionTable'
@@ -25,6 +26,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState(null)
   const [reportLoading, setReportLoading] = useState(false)
+  const [directResult, setDirectResult] = useState(null)
+  const [manualLoading, setManualLoading] = useState(false)
 
   const { carbonIntensity, gpuNodes, powerHistory, connected } = useLiveStream(region)
 
@@ -35,6 +38,7 @@ function App() {
   async function handleAnalyze(text) {
     setLoading(true)
     setReport(null)
+    setDirectResult(null)
     try {
       const data = await estimateFromText(text)
       setTrace(data.trace)
@@ -47,7 +51,24 @@ function App() {
     }
   }
 
-  const result = trace ? extractResult(trace) : null
+  async function handleManualAnalyze(fields) {
+    setManualLoading(true)
+    try {
+      const nodeId = gpuNodes?.[0]?.node_id
+      const data = await generateReport({ ...fields, ...(nodeId ? { node_id: nodeId } : {}) })
+      setReport(data)
+      setDirectResult(data.baseline)
+      setTrace([{ type: 'final_answer', text: data.executive_summary }])
+      setEngine('manual')
+    } catch (err) {
+      setTrace([{ type: 'final_answer', text: `Error: ${err.message}. Is the backend running on :8000?` }])
+      setEngine(null)
+    } finally {
+      setManualLoading(false)
+    }
+  }
+
+  const result = (trace && extractResult(trace)) || directResult
 
   async function handleGenerateReport() {
     if (!result) return
@@ -95,8 +116,9 @@ function App() {
         />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <WorkloadForm onSubmit={handleAnalyze} loading={loading} />
+        <ScenarioForm regions={regions} onSubmit={handleManualAnalyze} loading={manualLoading} />
       </div>
 
       <div className="mb-6">

@@ -7,6 +7,7 @@ const ENGINE_LABELS = {
   fireworks: 'Fireworks · AMD MI300X',
   claude: 'Claude',
   fallback: 'Fallback parser',
+  manual: 'Direct calculation',
 }
 
 const MARKDOWN_COMPONENTS = {
