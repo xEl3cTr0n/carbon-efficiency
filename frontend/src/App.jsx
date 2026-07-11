@@ -13,6 +13,7 @@ import OptimizationQueue from './components/OptimizationQueue'
 import OperatorReport from './components/OperatorReport'
 import TelemetryCharts from './components/TelemetryCharts'
 import RunHistory from './components/RunHistory'
+import RunComparison from './components/RunComparison'
 import Tabs from './components/Tabs'
 import { Activity, Radio, TrendingDown, MapPin } from 'lucide-react'
 
@@ -52,6 +53,7 @@ function App() {
   const [manualLoading, setManualLoading] = useState(false)
   const [tab, setTab] = useState('analyze')
   const [runs, setRuns] = useState(loadStoredRuns)
+  const [compareIds, setCompareIds] = useState([])
 
   const { carbonIntensity, gpuNodes, powerHistory, connected } = useLiveStream(region)
 
@@ -66,6 +68,19 @@ function App() {
       // storage full or unavailable (private browsing) - history just won't persist
     }
   }, [runs])
+
+  function toggleCompare(id) {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id)
+      if (prev.length >= 2) return prev
+      return [...prev, id]
+    })
+  }
+
+  function clearRuns() {
+    setRuns([])
+    setCompareIds([])
+  }
 
   function recordRun({ engineUsed, trace: runTrace, result: runResult, report: runReport }) {
     if (!runResult) return
@@ -191,10 +206,24 @@ function App() {
             <StatTiles result={result} />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             <AgentTrace trace={trace} engine={engine} />
-            <RunHistory runs={runs} onSelect={loadRun} onClear={() => setRuns([])} />
+            <RunHistory
+              runs={runs}
+              onSelect={loadRun}
+              onClear={clearRuns}
+              compareIds={compareIds}
+              onToggleCompare={toggleCompare}
+            />
           </div>
+
+          {compareIds.length === 2 && (
+            <RunComparison
+              runA={runs.find((r) => r.id === compareIds[0])}
+              runB={runs.find((r) => r.id === compareIds[1])}
+              onClear={() => setCompareIds([])}
+            />
+          )}
         </>
       )}
 
