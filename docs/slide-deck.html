@@ -319,6 +319,32 @@
   </div>
 </section>
 
+<!-- Slide 3.5: Beyond the MVP -->
+<section class="slide">
+  <div class="kicker">Beyond The MVP</div>
+  <h2>A full decision-support product, not a calculator</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Plan &amp; compare</h3>
+      <ul class="plain">
+        <li>Ranked optimization queue across every GPU × region combo — normalized by equal work delivered, not just equal wall-clock hours</li>
+        <li>A+ to F efficiency grade, scored against every possible configuration for the same workload size</li>
+        <li>Real-world impact equivalents — miles driven, smartphone charges, gallons of gasoline</li>
+        <li>Electricity cost estimates alongside carbon, energy, and water</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Verify &amp; operate</h3>
+      <ul class="plain">
+        <li>Live GPU telemetry fleet view — every reading tagged real hardware vs. simulated, so evidence is never misleading</li>
+        <li>Interactive, drag-to-rotate globe of live grid carbon intensity by region</li>
+        <li>Session run history with side-by-side scenario comparison and localStorage persistence</li>
+        <li>Command palette, keyboard shortcuts, and shareable scenario deep links</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- Slide 4: Architecture -->
 <section class="slide">
   <div class="kicker">How It Works</div>
@@ -355,7 +381,7 @@
       </div>
     </div>
   </div>
-  <p class="body-text" style="margin-top: 24px; font-size: 16px; color: #94a3b8;">Every LLM call and every failure gracefully degrades — Fireworks → Claude → local regex parser — so the app is always demoable, and every response is tagged with which engine actually produced it.</p>
+  <p class="body-text" style="margin-top: 24px; font-size: 16px; color: #94a3b8;">Every LLM call and every failure gracefully degrades — Fireworks → Claude → local regex parser — so the app is always demoable, and every response is tagged with which engine actually produced it. Live grid intensity feeds directly into the carbon math (not just the map) whenever it's available.</p>
 </section>
 
 <!-- Slide 5: AMD compute evidence -->
@@ -386,6 +412,10 @@
       <div class="fact-label">Full evidence</div>
       <div class="fact-value">docs/amd-hardware-evidence.md in repo</div>
     </div>
+    <div class="fact">
+      <div class="fact-label">Integrity</div>
+      <div class="fact-value">Simulated telemetry is tagged &amp; labeled — never shown as real</div>
+    </div>
   </div>
 </section>
 
@@ -395,16 +425,16 @@
   <h2>Roadmap beyond the hackathon</h2>
   <div class="roadmap-row">
     <div class="roadmap-item">
-      <h3>Carbon-per-token, not carbon-per-GPU-hour</h3>
-      <p>Normalize comparisons by actual compute delivered, not just power draw — a fairer AMD vs. alternative comparison.</p>
-    </div>
-    <div class="roadmap-item">
       <h3>Rack/server-level oversight (Tier 2)</h3>
       <p>Real server power via IPMI/Redfish and PDU metering, for teams running their own hardware rather than cloud instances.</p>
     </div>
     <div class="roadmap-item">
       <h3>Cloud provider carbon APIs</h3>
       <p>AWS/GCP/Azure emissions exports as an additional live data source, account-scoped, for teams already on those platforms.</p>
+    </div>
+    <div class="roadmap-item">
+      <h3>Shared team accounts</h3>
+      <p>Sync run history and decision logs to a backend database instead of per-browser localStorage, so a whole team can compare scenarios together.</p>
     </div>
   </div>
 </section>
